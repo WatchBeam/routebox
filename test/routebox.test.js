@@ -332,4 +332,45 @@ describe('routebox', function () {
             });
         });
     });
+
+    it('respects config.plugins.routebox.parse.headers', function(done) {
+        server.route({
+            method: 'get', path: '/a',
+            config: {
+                cache: { expiresIn: 1000 },
+                handler: (req, reply) => {
+                    reply(i++);
+                },
+                plugins: {
+                    routebox: {
+                        parse: {
+                            headers: {
+                                'accept-language': true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        var i = 0;
+        server.inject({ method: 'GET', url: '/a', headers: {'Accept-Language': 'en'} }, (res) => {
+            expect(res.result).to.equal(0);
+            expect(res.statusCode).to.equal(200);
+            assertNotCached(res);
+
+            server.inject({ method: 'GET', url: '/a', headers: {'Accept-Language': 'es'} }, (res2) => {
+                expect(res2.result).to.equal(1);
+                expect(res2.statusCode).to.equal(200);
+                assertNotCached(res2);
+
+                server.inject({ method: 'GET', url: '/a', headers: {'Accept-Language': 'en'} }, (res3) => {
+                    expect(res3.result).to.equal(0);
+                    expect(res3.statusCode).to.equal(200);
+                    assertCached(res3);
+                    done();
+                });
+            });
+        });
+    });
 });
