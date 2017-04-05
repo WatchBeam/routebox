@@ -23,16 +23,18 @@
   },
   "homepage": "https://github.com/WatchBeam/routebox#readme",
   "devDependencies": {
+    "catbox": "^7.1.3",
     "chai": "^3.4.1",
     "eslint": "^2.2.0",
     "eslint-config-airbnb": "^7.0.0",
     "hapi": "^15.2.0",
     "mocha": "^3.0.1",
-    "timekeeper": "^1.0.0"
+    "sinon": "^2.1.0"
   },
   "dependencies": {
     "es-hash": "^1.0.4",
     "hoek": "^4.0.1",
-    "joi": "^9.0.0"
+    "joi": "^9.0.0",
+    "lru-cache": "^4.0.2"
   }
 }
