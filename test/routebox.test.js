@@ -18,27 +18,21 @@ describe('routebox', function () {
     let server;
     let clock;
 
-    afterEach(done => {
+    afterEach(() => {
         clock.restore();
-        server.stop(done);
+        return server.stop();
     });
 
     describe('without LRU', () => {
-        beforeEach(done => {
+        beforeEach(() => {
             server = new Hapi.Server();
             server.connection();
-            server.register(require('../'), (err) => {
-                expect(err).to.not.exist;
-
-                server.start((err) => {
-                    expect(err).to.not.exist;
-                    clock = sinon.useFakeTimers();
-                    done();
-                });
-            });
+            return server.register(require('../'))
+            .then(() => server.start())
+            .then(() => clock = sinon.useFakeTimers());
         });
 
-        it('caches responses', done => {
+        it('caches responses', () => {
             server.route({
                 method: 'get', path: '/a',
                 config: {
@@ -48,21 +42,21 @@ describe('routebox', function () {
             });
 
             let i = 0;
-            server.inject({ method: 'GET', url: '/a' }, (res) => {
+            return server.inject({ method: 'GET', url: '/a' })
+            .then(res => {
                 expect(res.result).to.equal(0);
                 expect(res.statusCode).to.equal(200);
                 assertNotCached(res);
-
-                server.inject({ method: 'GET', url: '/a' }, (res2) => {
-                    expect(res2.result).to.equal(0);
-                    expect(res2.statusCode).to.equal(200);
-                    assertCached(res2);
-                    done();
-                });
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(res => {
+                expect(res.result).to.equal(0);
+                expect(res.statusCode).to.equal(200);
+                assertCached(res);
             });
         });
 
-        it('expires ttl correctly', done => {
+        it('expires ttl correctly', () => {
             server.route({
                 method: 'get', path: '/a',
                 config: {
@@ -72,22 +66,22 @@ describe('routebox', function () {
             });
 
             let i = 0;
-            server.inject({ method: 'GET', url: '/a' }, (res) => {
+            return server.inject({ method: 'GET', url: '/a' })
+            .then(res => {
                 expect(res.result).to.equal(0);
                 expect(res.statusCode).to.equal(200);
                 assertNotCached(res);
                 clock.tick(1001);
-
-                server.inject({ method: 'GET', url: '/a' }, (res2) => {
-                    expect(res2.result).to.equal(1);
-                    expect(res2.statusCode).to.equal(200);
-                    assertNotCached(res2);
-                    done();
-                });
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(res => {
+                    expect(res.result).to.equal(1);
+                    expect(res.statusCode).to.equal(200);
+                    assertNotCached(res);
             });
         });
 
-        it('does not cache on routes without caching', done => {
+        it('does not cache on routes without caching', () => {
             server.route({
                 method: 'get', path: '/a',
                 config: {
@@ -96,21 +90,22 @@ describe('routebox', function () {
             });
 
             let i = 0;
-            server.inject({ method: 'GET', url: '/a' }, (res) => {
+            return server.inject({ method: 'GET', url: '/a' })
+            .then(res => {
                 expect(res.result).to.equal(0);
                 expect(res.statusCode).to.equal(200);
                 assertNotCached(res);
 
-                server.inject({ method: 'GET', url: '/a' }, (res2) => {
-                    expect(res2.result).to.equal(1);
-                    expect(res2.statusCode).to.equal(200);
-                    assertNotCached(res2);
-                    done();
-                });
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(res => {
+                expect(res.result).to.equal(1);
+                expect(res.statusCode).to.equal(200);
+                assertNotCached(res);
             });
         });
 
-        it('does not cache on routes with private caching', done => {
+        it('does not cache on routes with private caching', () => {
             server.route({
                 method: 'get', path: '/a',
                 config: {
@@ -128,27 +123,29 @@ describe('routebox', function () {
             });
 
             let i = 0;
-            server.inject({ method: 'GET', url: '/b' }, (res) => {
+            return server.inject({ method: 'GET', url: '/b' })
+            .then(res => {
                 expect(res.result).to.equal(0);
                 expect(res.statusCode).to.equal(200);
                 assertNotCached(res);
 
-                server.inject({ method: 'GET', url: '/a' }, (res2) => {
-                    expect(res2.result).to.equal(1);
-                    expect(res2.statusCode).to.equal(200);
-                    assertNotCached(res);
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(res => {
+                expect(res.result).to.equal(1);
+                expect(res.statusCode).to.equal(200);
+                assertNotCached(res);
 
-                    server.inject({ method: 'GET', url: '/a' }, (res3) => {
-                        expect(res3.result).to.equal(2);
-                        expect(res3.statusCode).to.equal(200);
-                        assertNotCached(res3);
-                        done();
-                    });
-                });
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(res => {
+                expect(res.result).to.equal(2);
+                expect(res.statusCode).to.equal(200);
+                assertNotCached(res);
             });
         });
 
-        it('does not cache not-ok responses', done => {
+        it('does not cache not-ok responses', () => {
             server.route({
                 method: 'get', path: '/a',
                 config: {
@@ -165,20 +162,22 @@ describe('routebox', function () {
             });
 
             let i = 0;
-            server.inject({ method: 'GET', url: '/a' }, (res) => {
+
+            return server.inject({ method: 'GET', url: '/a' })
+            .then(res => {
                 expect(res.statusCode).to.equal(500);
                 assertNotCached(res);
 
-                server.inject({ method: 'GET', url: '/a' }, (res2) => {
-                    expect(res2.result).to.equal(2);
-                    expect(res2.statusCode).to.equal(200);
-                    assertNotCached(res2);
-                    done();
-                });
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(res => {
+                expect(res.result).to.equal(2);
+                expect(res.statusCode).to.equal(200);
+                assertNotCached(res);
             });
         });
 
-        it('respects reply.nocache', done => {
+        it('respects reply.nocache', () => {
             server.route({
                 method: 'get', path: '/a',
                 config: {
@@ -191,21 +190,22 @@ describe('routebox', function () {
             });
 
             let i = 0;
-            server.inject({ method: 'GET', url: '/a' }, (res) => {
+            return server.inject({ method: 'GET', url: '/a' })
+            .then(res => {
                 expect(res.result).to.equal(0);
                 expect(res.statusCode).to.equal(200);
                 assertNotCached(res);
 
-                server.inject({ method: 'GET', url: '/a' }, (res2) => {
-                    expect(res2.result).to.equal(1);
-                    expect(res2.statusCode).to.equal(200);
-                    assertNotCached(res2);
-                    done();
-                });
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(res => {
+                expect(res.result).to.equal(1);
+                expect(res.statusCode).to.equal(200);
+                assertNotCached(res);
             });
         });
 
-        it('uses callback functions', done => {
+        it('uses callback functions', () => {
             let missCalled = 0;
             let hitCalled = 0;
             server.route({
@@ -232,20 +232,18 @@ describe('routebox', function () {
                 },
             });
 
-            server.inject({ method: 'GET', url: '/a' }, (res) => {
+            return server.inject({ method: 'GET', url: '/a' })
+            .then(() => {
                 expect(missCalled).to.equal(1);
-
-                server.inject({ method: 'GET', url: '/a' }, (res2) => {
-                    expect(hitCalled).to.equal(1);
-                    done();
-                });
-            });
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(() => expect(hitCalled).to.equal(1));
         });
     });
 
     describe('with LRU', () => {
         let catbox;
-        beforeEach(done => {
+        beforeEach(() => {
             catbox = sinon.createStubInstance(Catbox.Client);
             catbox.start.yields();
             catbox.validateSegmentName.returns(null);
@@ -255,21 +253,15 @@ describe('routebox', function () {
 
             server = new Hapi.Server({ cache: MockCacheCtor });
             server.connection();
-            server.register({
+            return server.register({
                 register: require('../'),
                 options: { lru: 128 },
-            }, (err) => {
-                expect(err).to.not.exist;
-
-                server.start((err) => {
-                    expect(err).to.not.exist;
-                    clock = sinon.useFakeTimers();
-                    done();
-                });
-            });
+            })
+            .then(() => server.start())
+            .then(() => clock = sinon.useFakeTimers());
         });
 
-        it('caches responses in the LRU cache', done => {
+        it('caches responses in the LRU cache', () => {
             catbox.get.onCall(0).yields(null, null);
             catbox.get.throws(new Error('expected not to get subsequent calls'));
 
@@ -282,21 +274,22 @@ describe('routebox', function () {
             });
 
             let i = 0;
-            server.inject({ method: 'GET', url: '/a' }, (res) => {
+            return server.inject({ method: 'GET', url: '/a' })
+            .then(res => {
                 expect(res.result).to.equal(0);
                 expect(res.statusCode).to.equal(200);
                 assertNotCached(res);
 
-                server.inject({ method: 'GET', url: '/a' }, (res2) => {
-                    expect(res2.result).to.equal(0);
-                    expect(res2.statusCode).to.equal(200);
-                    assertCached(res2);
-                    done();
-                });
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(res => {
+                expect(res.result).to.equal(0);
+                expect(res.statusCode).to.equal(200);
+                assertCached(res);
             });
         });
 
-        it('does not cache responses that are too big', done => {
+        it('does not cache responses that are too big', () => {
             catbox.get.yields(null, null);
 
             server.route({
@@ -307,20 +300,19 @@ describe('routebox', function () {
                 },
             });
 
-            let i = 0;
-            server.inject({ method: 'GET', url: '/a' }, (res) => {
+            return server.inject({ method: 'GET', url: '/a' })
+            .then(res => {
                 expect(res.statusCode).to.equal(200);
                 assertNotCached(res);
-
-                server.inject({ method: 'GET', url: '/a' }, (res2) => {
-                    expect(res2.statusCode).to.equal(200);
-                    assertNotCached(res2);
-                    done();
-                });
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(res => {
+                expect(res.statusCode).to.equal(200);
+                assertNotCached(res);
             });
         });
 
-        it('rejects old cached responses', done => {
+        it('rejects old cached responses', () => {
             catbox.get.yields(null, null);
 
             server.route({
@@ -332,18 +324,19 @@ describe('routebox', function () {
             });
 
             let i = 0;
-            server.inject({ method: 'GET', url: '/a' }, (res) => {
+            return server.inject({ method: 'GET', url: '/a' })
+            .then(res => {
                 expect(res.result).to.equal(0);
                 expect(res.statusCode).to.equal(200);
                 assertNotCached(res);
                 clock.tick(1001);
 
-                server.inject({ method: 'GET', url: '/a' }, (res2) => {
-                    expect(res2.result).to.equal(1);
-                    expect(res2.statusCode).to.equal(200);
-                    assertNotCached(res2);
-                    done();
-                });
+                return server.inject({ method: 'GET', url: '/a' });
+            })
+            .then(res => {
+                expect(res.result).to.equal(1);
+                expect(res.statusCode).to.equal(200);
+                assertNotCached(res);
             });
         });
     });
