@@ -19,8 +19,9 @@ By default, all endpoints with the `cache` configured in their [route options](h
 These options are available when routebox is registered and can also be overridden on a per-route basis by passing in `config.plugins.routebox`:
 
  * `cache` corresponds to the cache name for response caches. Uses the server's default if not given.
+ * `lru` when set, allows responses to be cached in-memory in _addition_ to the catbox cache. We try to serve responses from memory instead of the underlying cache when possible.
  * `enabled` whether to enable caching on the endpoint. Defaults to `true`, meaning all viable (see above) endpoints will be cached.
- * `digest` defaults to `djb2`, this is the algorithm used to digest the request for caching purposes. Other available options are: `md5`, `sha1`, `sha256`, `sha512`, `ripemd160`.
+ * `digest` defaults to `sha1`, this is the algorithm used to digest the request for caching purposes. Other available options are: `md5`, `sha1`, `sha256`, `sha512`, `ripemd160`.
  * `segment` is the Catbox cache segment to store in. Defaults to `routebox`
  * `wasCachedHeader` header that gets sent down when we serve a cached response. Defaults to `X-Was-Cached`.
  * `parse` configures which parts of the request will be used to form the cache key:
