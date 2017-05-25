@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/WatchBeam/routebox.git"
+    "url": "git+https://github.com/mixer/routebox.git"
   },
   "keywords": [
     "catbox",
@@ -19,9 +19,9 @@
   "author": "Connor Peet <connor@peet.io>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/WatchBeam/routebox/issues"
+    "url": "https://github.com/mixer/routebox/issues"
   },
-  "homepage": "https://github.com/WatchBeam/routebox#readme",
+  "homepage": "https://github.com/mixer/routebox#readme",
   "devDependencies": {
     "catbox": "^7.1.3",
     "chai": "^3.4.1",

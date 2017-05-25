@@ -1,6 +1,6 @@
 # Routebox
 
-[![Build Status](https://img.shields.io/travis/WatchBeam/routebox.svg?style=flat-square)](https://travis-ci.org/WatchBeam/routebox)
+[![Build Status](https://img.shields.io/travis/mixer/routebox.svg?style=flat-square)](https://travis-ci.org/mixer/routebox)
 
 Routebox integrates with catbox to provide transparent route-level caching. It can work with zero configuration changes on your server.
 
